@@ -17,8 +17,9 @@ class Settings(BaseSettings):
 
     chunk_size: int = 512
     chunk_overlap: int = 50
-    enable_summary: bool = True
+    enable_summary: bool = False
     enable_subject: bool = True
+    enable_format: bool = True
 
 
 @lru_cache

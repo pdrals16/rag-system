@@ -13,11 +13,7 @@ logger = logging.getLogger(__name__)
 
 def build_index(documents: list[Document], settings: Settings) -> Chroma:
     processor = DocumentProcessor(settings)
-    for doc in documents:  # TODO: batch/cap LLM calls for large multi-page files
-        if settings.enable_summary:
-            doc.metadata["summary"] = processor.resume(doc)
-        if settings.enable_subject:
-            doc.metadata["subject"] = processor.extract_tags(doc).subject
+    processor.enrich_documents(documents)
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.chunk_size,
