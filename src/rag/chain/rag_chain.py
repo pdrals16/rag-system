@@ -1,7 +1,7 @@
 from langchain_anthropic import ChatAnthropic
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import Runnable, RunnablePassthrough
+from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
 
 from rag.chain.prompts import build_prompt
 from rag.chain.steps.doc_formatter import format_docs
@@ -32,9 +32,16 @@ def build_chain(
     _prompt = prompt or build_prompt()
 
     chain = (
-        {"context": _retriever | format_docs, "question": RunnablePassthrough()}
-        | _prompt
-        | _llm
-        | StrOutputParser()
+        RunnableLambda(lambda q: {"question": q})
+        | RunnablePassthrough.assign(
+            documents=lambda x: _retriever.invoke(x["question"])
+        )
+        | RunnablePassthrough.assign(
+            context=lambda x: format_docs(x["documents"])
+        )
+        | {
+            "answer": _prompt | _llm | StrOutputParser(),
+            "documents": lambda x: x["documents"],
+        }
     )
     return chain
